@@ -12,3 +12,11 @@ class TuanzhangItem(scrapy.Item):
     
     sn = scrapy.Field()
     pdf_url = scrapy.Field()    
+
+class  FilesItem(scrapy.Item):
+    """docstring for  FilesItem"""
+    file_urls = scrapy.Field()
+    files = scrapy.Field()
+    file_paths = scrapy.Field()
+    filename = scrapy.Field()
+        

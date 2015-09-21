@@ -24,13 +24,14 @@ NEWSPIDER_MODULE = 'tuanzhang.spiders'
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-#DOWNLOAD_DELAY=3
+DOWNLOAD_DELAY=3
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN=16
 #CONCURRENT_REQUESTS_PER_IP=16
 
 # Disable cookies (enabled by default)
-#COOKIES_ENABLED=False
+COOKIES_ENABLED=True
+COOKIES_DEBUG=False
 
 # Disable Telnet Console (enabled by default)
 #TELNETCONSOLE_ENABLED=False
@@ -62,8 +63,13 @@ NEWSPIDER_MODULE = 'tuanzhang.spiders'
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'tuanzhang.pipelines.TuanzhangPipeline': 300,
+    'tuanzhang.pipelines.FilesPipeline': 1,
+    #'tuanzhang.pipelines.RenamePipeline': 100,
+    #'tuanzhang.pipelines.TuanzhangPipeline': 300,
 }
+
+# FILES_STORE
+FILES_STORE = 'C:\\nginx\\html\\tuanzhang'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
@@ -83,3 +89,6 @@ ITEM_PIPELINES = {
 #HTTPCACHE_DIR='httpcache'
 #HTTPCACHE_IGNORE_HTTP_CODES=[]
 #HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
+
+# LOG
+LOG_LEVEL='WARNING'
