@@ -12,9 +12,10 @@ class SheetMpsSpider(scrapy.Spider):
         'http://www.monolithicpower.com/',
     )
 
+    def __init__(self):
+        self.cnt = 0
+
     def parse(self, response):
-        #url = 'http://www.monolithicpower.com/DesktopModules/ProductManage/API/Product/GetCategoryTree?orderBy='
-        #url = 'http://www.htckorea.co.kr/Datasheet/Voltage Stabilizer/TL432-R1.5.pdf'
         fp = open('category.json', 'r+')
         category = json.load(fp)
         fp.close()
@@ -22,12 +23,12 @@ class SheetMpsSpider(scrapy.Spider):
         for val in category['Data']:
             _url = url % (val['CategoryID'], (time.time() * 1000))
             yield scrapy.Request(_url, callback=self.secondary_parse, cookies={
-                '.ASPXANONYMOUS' : 'HkZetkYp0QEkAAAANDc0ZDRlNDYtODIyYy00Mjg2LWE2MzYtYWU4ZGZiNmEzMmE40',
+                '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
                 'ASP.NET_SessionId' : 'anjij3yloyjcipaxsyj5z4w3',
                 'authentication' : 'DNN',
                 'dnn_IsMobile' : 'False',
-                '.DOTNETNUKE' : '46C2302193779383F45DE7C199AD0F0589E557FE8013A744A8DD7AA1445FC7F953D509DD3FB59FA0F6AB48ADFA44895EBF9ACC0802E763AA42AC1F8C20397B3CC4E9FA994BA4BF5C3AF436CD7B5E2DEFB0BC4BA47360477CBD369C634BDA92E9959EBF26EFB834AC751F849CEF297B2C9B14568010BA924D28F45D48AAE025D25392C4C8',
-                '_ga' : 'GA1.2.1645343463.1442651428',
+                '.DOTNETNUKE' : '033E9855CAABF5F46B44A69607A1F140610106B7B931C77DCC24C75B3D621357F651778680410226BDCA223D20DF23532F461FED77F07E18A7345C7966EC8034C5FB5EE996006831320DA71FB9DFDDFC6907B47DD82116C7B08CF40E0994BBDFF5EC7B406D4D34E3F9E6DC5D6A899E2B84CEAEA4A2F01D17F480E7E3FCFFF9E48AAA0DD8',
+                '_ga' : 'GA1.2.1508715189.1442802415',
                 '_gat' : '1',
                 'language' : 'en-US'
                 })
@@ -44,4 +45,6 @@ class SheetMpsSpider(scrapy.Spider):
                 url = response.urljoin(val['datasheet_url'])
                 item['filename'][url] = val['partnumber']
                 item['file_urls'].append(url)
+                self.cnt += 1
+                print self.cnt
             return item

@@ -11,12 +11,11 @@ class SheetSpider(scrapy.Spider):
     )
 
     def parse(self, response):
-        test = response.xpath('//td/a/strong/text() | //td/strong/a/text() | //td/p/strong/a/text()').extract()
+        #test = response.xpath('//td/a/strong/text() | //td/strong/a/text() | //td/p/strong/a/text()').extract()
         url = response.xpath('//td/a[@class="link_6"]/@href | //td/strong/a[@class="link_6"]/@href | //td/p/strong/a[@class="link_6"]/@href').extract()
         #print url, response.urljoin(url[0])
         #print len(test), len(url)
         url_lst = response.xpath('//td/a[@class="link_6"] | //td/strong/a[@class="link_6"] | //td/p/strong/a[@class="link_6"]')
-        i = 0
         for row in url_lst:
             sn = row.xpath('./strong/text() | ./text()').extract()[0]
             url = row.xpath('./@href').extract()[0]

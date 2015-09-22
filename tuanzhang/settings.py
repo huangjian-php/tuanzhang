@@ -24,7 +24,7 @@ NEWSPIDER_MODULE = 'tuanzhang.spiders'
 # Configure a delay for requests for the same website (default: 0)
 # See http://scrapy.readthedocs.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY=3
+DOWNLOAD_DELAY=0.25
 # The download delay setting will honor only one of:
 #CONCURRENT_REQUESTS_PER_DOMAIN=16
 #CONCURRENT_REQUESTS_PER_IP=16
@@ -69,7 +69,8 @@ ITEM_PIPELINES = {
 }
 
 # FILES_STORE
-FILES_STORE = 'C:\\nginx\\html\\tuanzhang'
+#FILES_STORE = 'C:\\nginx\\html\\tuanzhang'
+FILES_STORE = '/home/wwwroot/default/tuanzhang'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See http://doc.scrapy.org/en/latest/topics/autothrottle.html
