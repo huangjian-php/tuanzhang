@@ -63,7 +63,7 @@ COOKIES_DEBUG=False
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'tuanzhang.pipelines.FilesPipeline': 1,
+    #'tuanzhang.pipelines.FilesPipeline': 1,
     #'tuanzhang.pipelines.RenamePipeline': 100,
     #'tuanzhang.pipelines.TuanzhangPipeline': 300,
 }

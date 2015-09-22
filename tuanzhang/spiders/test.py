@@ -12,14 +12,15 @@ class TestSpider(scrapy.Spider):
     )
 
     def parse(self, response):
-        #url = 'http://www.monolithicpower.com/DesktopModules/DocumentManage/API/Document/GetDocument?id=3320'
         fp = open('retry.json', 'r+')
         info = json.load(fp)
         fp.close()
 
-        print info
+        #print info
         item = FilesItem()
         item['filename'] = info['filename']
         item['file_urls'] = info['file_urls']
         return item
+
+    
 
