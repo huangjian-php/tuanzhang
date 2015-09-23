@@ -5,7 +5,7 @@ import json
 
 
 class TestSpider(scrapy.Spider):
-    name = "test"
+    name = "retry"
     allowed_domains = ["monolithicpower.com"]
     start_urls = (
         'http://www.monolithicpower.com/',
