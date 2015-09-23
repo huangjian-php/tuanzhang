@@ -3,7 +3,7 @@ import scrapy
 from tuanzhang.items import FilesItem
 import json, re
 import time
-import types
+import libxml2
 
 
 class SheetMpsSpider(scrapy.Spider):
@@ -17,6 +17,18 @@ class SheetMpsSpider(scrapy.Spider):
         self.cnt = 0
         self.relation = open('relation.csv', 'w+')
         self.relation.write("型号, 地址, 系列\n")
+        self.field_enum = {}
+        doc = libxml2.parseFile('enum.xml')
+        for val in doc.xpathEval('//Field'):
+            shortname = val.xpathEval('@shortName')[0].content
+            self.field_enum[shortname] = {}
+            for item in val.xpathEval('Enum/Item'):
+                label = item.xpathEval('Label/text()')[0].content
+                value = item.xpathEval('Value/text()')[0].content
+                self.field_enum[shortname][value] = label
+        print self.field_enum
+        doc.freeDoc()
+
 
     def parse(self, response):
         fp = open('category.json', 'r+')
@@ -26,12 +38,12 @@ class SheetMpsSpider(scrapy.Spider):
         for val in category['Data']:
             _url_third = url_third % val['CategoryID']
             yield scrapy.Request(_url_third, callback=self.third_parse, cookies={
-                '.ASPXANONYMOUS' : 'HkZetkYp0QEkAAAANDc0ZDRlNDYtODIyYy00Mjg2LWE2MzYtYWU4ZGZiNmEzMmE40',
-                'ASP.NET_SessionId' : 'anjij3yloyjcipaxsyj5z4w3',
+                '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
+                'ASP.NET_SessionId' : 'zv4axilksd5yl0k0o32gs54e',
                 'authentication' : 'DNN',
                 'dnn_IsMobile' : 'False',
-                '.DOTNETNUKE' : '6E03BB48103C884FF2E41F0F229AA3CA241D106A9755288841E8C5FB56F63202FC825E39C887CEDE5AE1A13F0C22CE2F9CD324FE718AEAF2A15C68AA2616C859770DD50E917A6C71E78DBA8E9FE68D814B55E42980351861CB2ECC43AEA67215C676A10441CA5AAEAD29D493ED5C3BA8A3039916D8741310D30C0BCBB829240FC9C5E062',
-                '_ga' : 'GA1.2.1645343463.1442651428',
+                '.DOTNETNUKE' : '419D8B851D2AD8886FC67A4F94DD09869B381CAF128CC7D0F6837783E974FEB4341531AA3B53A1BE4A3313DE0F9BCBBBCC566E646B2A38C2A0A0549388198D1F53DA3D1826003264EE13E35D6B3C6B6C612824157BE0AA0DDBF1A6EF3048D6F7ADB5D1E867EF9A70856D8E21AADB6A9D766D37B59D3456995FE7D37715062E767CE4FE7C',
+                '_ga' : 'GA1.2.1508715189.1442802415',
                 '_gat' : '1',
                 'language' : 'en-US'
                 }, meta={'name' : val['Name'], 'CategoryID' : val['CategoryID']})
@@ -59,9 +71,17 @@ class SheetMpsSpider(scrapy.Spider):
                 lst_csv = ['%s'] * len(response.meta['field']);
                 lst = []
                 for field in response.meta['field']:
-                    lst.append(val[field])
+                    if self.field_enum.has_key(field) and self.field_enum[field].has_key(val[field]):
+                        lst.append(self.field_enum[field][val[field]])
+                    else:
+                        lst.append(val[field] if val[field] else '')
+                    #print response.meta['field']
+                    #print response.meta['field_name']
+                    #print val
+
                 str_csv = (','.join(lst_csv)) % tuple(lst)
                 sheet.write(str_csv.decode('utf8') + "\n")
+
 
                 self.cnt += 1
                 #print self.cnt
@@ -78,24 +98,24 @@ class SheetMpsSpider(scrapy.Spider):
         regular = re.compile(pattern, re.DOTALL)
         match = regular.findall(body)
         if match:
-            match =re.sub(r'"formatter":.+?\);\},',' ',match[0])
+            match =re.sub(r'function\(value,item\)\s*\{.+?\}','1',match[0])
             data = eval(match.replace('null', 'None'))
             if data:
                 field = []
                 field_name = []
                 for val in data:
-                    #if 1 == val['displayable'] or '1' == val['displayable']:
-                    field.append(val['shortname'])
-                    field_name.append(val['name'])
+                    if 1 == val['columnvisible']:
+                        field.append(val['shortname'].decode('utf8'))
+                        field_name.append(val['name'])
                 url = 'http://www.monolithicpower.com/Desktopmodules/Product/Ajax.ashx?method=getProducts&categoryID=%s&_=%d'
                 _url = url % (response.meta['CategoryID'], (time.time() * 1000))
                 yield scrapy.Request(_url, callback=self.secondary_parse, cookies={
-                    '.ASPXANONYMOUS' : 'HkZetkYp0QEkAAAANDc0ZDRlNDYtODIyYy00Mjg2LWE2MzYtYWU4ZGZiNmEzMmE40',
-                    'ASP.NET_SessionId' : 'anjij3yloyjcipaxsyj5z4w3',
+                    '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
+                    'ASP.NET_SessionId' : 'zv4axilksd5yl0k0o32gs54e',
                     'authentication' : 'DNN',
                     'dnn_IsMobile' : 'False',
-                    '.DOTNETNUKE' : '6E03BB48103C884FF2E41F0F229AA3CA241D106A9755288841E8C5FB56F63202FC825E39C887CEDE5AE1A13F0C22CE2F9CD324FE718AEAF2A15C68AA2616C859770DD50E917A6C71E78DBA8E9FE68D814B55E42980351861CB2ECC43AEA67215C676A10441CA5AAEAD29D493ED5C3BA8A3039916D8741310D30C0BCBB829240FC9C5E062',
-                    '_ga' : 'GA1.2.1645343463.1442651428',
+                    '.DOTNETNUKE' : '419D8B851D2AD8886FC67A4F94DD09869B381CAF128CC7D0F6837783E974FEB4341531AA3B53A1BE4A3313DE0F9BCBBBCC566E646B2A38C2A0A0549388198D1F53DA3D1826003264EE13E35D6B3C6B6C612824157BE0AA0DDBF1A6EF3048D6F7ADB5D1E867EF9A70856D8E21AADB6A9D766D37B59D3456995FE7D37715062E767CE4FE7C',
+                    '_ga' : 'GA1.2.1508715189.1442802415',
                     '_gat' : '1',
                     'language' : 'en-US'
                     }, meta={'name' : response.meta['name'], 'field' : field, 'field_name' : field_name})
