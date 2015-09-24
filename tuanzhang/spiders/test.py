@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import json, re, time
+import re
 import libxml2
 
 
@@ -36,15 +36,17 @@ class TestSpider(scrapy.Spider):
                 field = []
                 field_name = []
                 for val in data:
-                    if 1 == val['columnvisible']:
+                    #if 1 == val['displayable'] or 1 == val['columnvisible'] or 1 == val['displayableindetail']:
                         field.append(val['shortname'].decode('utf8'))
-                        field_name.append(val['name'])
+                        field_name.append('"' + val['name'] + '"')
                 print field
                 print field_name
+                for name in field_name:
+                    print name
                 print len(field)
                 #print data
                 print len(data)
-                #print data[0]
+                print data[0]
                 #url = 'http://www.monolithicpower.com/Desktopmodules/Product/Ajax.ashx?method=getProducts&categoryID=%s&_=%d'
                 #_url = url % (response.meta['CategoryID'], (time.time() * 1000))
         else:

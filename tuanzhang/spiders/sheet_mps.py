@@ -16,7 +16,7 @@ class SheetMpsSpider(scrapy.Spider):
     def __init__(self):
         self.cnt = 0
         self.relation = open('relation.csv', 'w+')
-        self.relation.write("型号, 地址, 系列\n")
+        self.relation.write("型号, 地址, 系列, 原厂\n")
         self.field_enum = {}
         doc = libxml2.parseFile('enum.xml')
         for val in doc.xpathEval('//Field'):
@@ -34,19 +34,29 @@ class SheetMpsSpider(scrapy.Spider):
         fp = open('category.json', 'r+')
         category = json.load(fp)
         fp.close()
+        index_category = {}
+        for val in category['Data']:
+            index_category[val['CategoryID']] = val
+
         url_third = 'http://www.monolithicpower.com/Desktopmodules/Product/Ajax.ashx?method=getColumns&categoryID=%s'
         for val in category['Data']:
             _url_third = url_third % val['CategoryID']
+            name = val['Name']
+            tmp = val
+            while 0 != tmp['ParentID']:
+                tmp = index_category[tmp['ParentID']]
+                name = tmp['Name'] + '-' + name
+
             yield scrapy.Request(_url_third, callback=self.third_parse, cookies={
                 '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
-                'ASP.NET_SessionId' : 'zv4axilksd5yl0k0o32gs54e',
+                'ASP.NET_SessionId' : 'e0e5rqj0pz3tj4b203messi0',
                 'authentication' : 'DNN',
                 'dnn_IsMobile' : 'False',
-                '.DOTNETNUKE' : '419D8B851D2AD8886FC67A4F94DD09869B381CAF128CC7D0F6837783E974FEB4341531AA3B53A1BE4A3313DE0F9BCBBBCC566E646B2A38C2A0A0549388198D1F53DA3D1826003264EE13E35D6B3C6B6C612824157BE0AA0DDBF1A6EF3048D6F7ADB5D1E867EF9A70856D8E21AADB6A9D766D37B59D3456995FE7D37715062E767CE4FE7C',
+                '.DOTNETNUKE' : '733F94091403C78179B5B8BDEF80AC5992DB09D95CC4644C4BC7091AD7FCC63498EF540A80A226E738293D59070ECA903F81DAB38FEF317E8122F2106D20EAACF3BD287CC585CBA78DE20829F4E32520A2E8ACCE356C3C81B34E0FB6900368E6EFE532AEA10AF90F5B3290FED5E873432FC4E8C432CD2862CD8C024B1048F6128FFADB6C',
                 '_ga' : 'GA1.2.1508715189.1442802415',
                 '_gat' : '1',
                 'language' : 'en-US'
-                }, meta={'name' : val['Name'], 'CategoryID' : val['CategoryID']})
+                }, meta={'name' : name, 'CategoryID' : val['CategoryID']})
         
 
     def secondary_parse(self, response):
@@ -65,10 +75,10 @@ class SheetMpsSpider(scrapy.Spider):
                 item['file_urls'].append(url)
 
                 #relation.csv
-                self.relation.write(','.join([val['partnumber'], base_url + val['partnumber'] + '.pdf', response.meta['name']]) + "\n")
+                self.relation.write(','.join([val['partnumber'], base_url + val['partnumber'] + '.pdf', response.meta['name'], url]) + "\n")
 
                 #sheet
-                lst_csv = ['%s'] * len(response.meta['field']);
+                lst_csv = ['"%s"'] * len(response.meta['field']);
                 lst = []
                 for field in response.meta['field']:
                     if self.field_enum.has_key(field) and self.field_enum[field].has_key(val[field]):
@@ -111,10 +121,10 @@ class SheetMpsSpider(scrapy.Spider):
                 _url = url % (response.meta['CategoryID'], (time.time() * 1000))
                 yield scrapy.Request(_url, callback=self.secondary_parse, cookies={
                     '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
-                    'ASP.NET_SessionId' : 'zv4axilksd5yl0k0o32gs54e',
+                    'ASP.NET_SessionId' : 'e0e5rqj0pz3tj4b203messi0',
                     'authentication' : 'DNN',
                     'dnn_IsMobile' : 'False',
-                    '.DOTNETNUKE' : '419D8B851D2AD8886FC67A4F94DD09869B381CAF128CC7D0F6837783E974FEB4341531AA3B53A1BE4A3313DE0F9BCBBBCC566E646B2A38C2A0A0549388198D1F53DA3D1826003264EE13E35D6B3C6B6C612824157BE0AA0DDBF1A6EF3048D6F7ADB5D1E867EF9A70856D8E21AADB6A9D766D37B59D3456995FE7D37715062E767CE4FE7C',
+                    '.DOTNETNUKE' : '733F94091403C78179B5B8BDEF80AC5992DB09D95CC4644C4BC7091AD7FCC63498EF540A80A226E738293D59070ECA903F81DAB38FEF317E8122F2106D20EAACF3BD287CC585CBA78DE20829F4E32520A2E8ACCE356C3C81B34E0FB6900368E6EFE532AEA10AF90F5B3290FED5E873432FC4E8C432CD2862CD8C024B1048F6128FFADB6C',
                     '_ga' : 'GA1.2.1508715189.1442802415',
                     '_gat' : '1',
                     'language' : 'en-US'
