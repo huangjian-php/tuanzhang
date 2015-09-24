@@ -16,7 +16,8 @@ class SheetMpsSpider(scrapy.Spider):
     def __init__(self):
         self.cnt = 0
         self.relation = open('relation.csv', 'w+')
-        self.relation.write("型号, 地址, 系列, 原厂\n")
+        title = '"型号", "地址", "系列", "原厂链接"\n'
+        self.relation.write(title)
         self.field_enum = {}
         doc = libxml2.parseFile('enum.xml')
         for val in doc.xpathEval('//Field'):
@@ -75,7 +76,7 @@ class SheetMpsSpider(scrapy.Spider):
                 item['file_urls'].append(url)
 
                 #relation.csv
-                self.relation.write(','.join([val['partnumber'], base_url + val['partnumber'] + '.pdf', response.meta['name'], url]) + "\n")
+                self.relation.write(','.join(['"' + val['partnumber'] + '"', '"' + base_url + val['partnumber'] + '.pdf"', '"' + response.meta['name'] + '"', '"' + url + '"']) + "\n")
 
                 #sheet
                 lst_csv = ['"%s"'] * len(response.meta['field']);
