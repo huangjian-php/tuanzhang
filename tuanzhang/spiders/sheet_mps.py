@@ -4,6 +4,10 @@ from tuanzhang.items import FilesItem
 import json, re
 import time
 import libxml2
+import sys
+
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 
 class SheetMpsSpider(scrapy.Spider):
@@ -42,18 +46,18 @@ class SheetMpsSpider(scrapy.Spider):
         url_third = 'http://www.monolithicpower.com/Desktopmodules/Product/Ajax.ashx?method=getColumns&categoryID=%s'
         for val in category['Data']:
             _url_third = url_third % val['CategoryID']
-            name = val['Name']
+            name = val['Name'].strip()
             tmp = val
             while 0 != tmp['ParentID']:
                 tmp = index_category[tmp['ParentID']]
-                name = tmp['Name'] + '-' + name
+                name = tmp['Name'].strip() + '-' + name
 
             yield scrapy.Request(_url_third, callback=self.third_parse, cookies={
                 '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
-                'ASP.NET_SessionId' : 'e0e5rqj0pz3tj4b203messi0',
+                'ASP.NET_SessionId' : 'akutighgwey5ja1x0zakf4k5',
                 'authentication' : 'DNN',
                 'dnn_IsMobile' : 'False',
-                '.DOTNETNUKE' : '733F94091403C78179B5B8BDEF80AC5992DB09D95CC4644C4BC7091AD7FCC63498EF540A80A226E738293D59070ECA903F81DAB38FEF317E8122F2106D20EAACF3BD287CC585CBA78DE20829F4E32520A2E8ACCE356C3C81B34E0FB6900368E6EFE532AEA10AF90F5B3290FED5E873432FC4E8C432CD2862CD8C024B1048F6128FFADB6C',
+                '.DOTNETNUKE' : '09C50769BCC212917BB1C2012B064B8A58EF855249ACB4F1989E85CB6247251E3B5C613AC7E86E32F82A7BB064974B9CDFEDCAE7E170DBA635D453C266C0257A70E4665AC23204A400850709F327883F63E0B9C9EC2FCC9C18ADE8777CAB4365BBA5E86BA20327DA1A534EFB37A4DDD320D9752F4B2E44FD065D2C1641839D9F452F44D6',
                 '_ga' : 'GA1.2.1508715189.1442802415',
                 '_gat' : '1',
                 'language' : 'en-US'
@@ -115,17 +119,20 @@ class SheetMpsSpider(scrapy.Spider):
                 field = []
                 field_name = []
                 for val in data:
-                    if 1 == val['columnvisible']:
+                    if 'Parametrics' == val['group'] or 'partnumber' == val['shortname'] or 'status_enumdesc' == val['shortname']:
                         field.append(val['shortname'].decode('utf8'))
-                        field_name.append(val['name'])
+                        if 'status_enumdesc' == val['shortname']:
+                            field_name.append('"Note For Status"')
+                        else:
+                            field_name.append('"' + val['name'] + '"')
                 url = 'http://www.monolithicpower.com/Desktopmodules/Product/Ajax.ashx?method=getProducts&categoryID=%s&_=%d'
                 _url = url % (response.meta['CategoryID'], (time.time() * 1000))
                 yield scrapy.Request(_url, callback=self.secondary_parse, cookies={
                     '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
-                    'ASP.NET_SessionId' : 'e0e5rqj0pz3tj4b203messi0',
+                    'ASP.NET_SessionId' : 'akutighgwey5ja1x0zakf4k5',
                     'authentication' : 'DNN',
                     'dnn_IsMobile' : 'False',
-                    '.DOTNETNUKE' : '733F94091403C78179B5B8BDEF80AC5992DB09D95CC4644C4BC7091AD7FCC63498EF540A80A226E738293D59070ECA903F81DAB38FEF317E8122F2106D20EAACF3BD287CC585CBA78DE20829F4E32520A2E8ACCE356C3C81B34E0FB6900368E6EFE532AEA10AF90F5B3290FED5E873432FC4E8C432CD2862CD8C024B1048F6128FFADB6C',
+                    '.DOTNETNUKE' : '09C50769BCC212917BB1C2012B064B8A58EF855249ACB4F1989E85CB6247251E3B5C613AC7E86E32F82A7BB064974B9CDFEDCAE7E170DBA635D453C266C0257A70E4665AC23204A400850709F327883F63E0B9C9EC2FCC9C18ADE8777CAB4365BBA5E86BA20327DA1A534EFB37A4DDD320D9752F4B2E44FD065D2C1641839D9F452F44D6',
                     '_ga' : 'GA1.2.1508715189.1442802415',
                     '_gat' : '1',
                     'language' : 'en-US'

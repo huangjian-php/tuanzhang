@@ -36,9 +36,12 @@ class TestSpider(scrapy.Spider):
                 field = []
                 field_name = []
                 for val in data:
-                    #if 1 == val['displayable'] or 1 == val['columnvisible'] or 1 == val['displayableindetail']:
+                    if 'Parametrics' == val['group'] or 'partnumber' == val['shortname'] or 'status_enumdesc' == val['shortname']:
                         field.append(val['shortname'].decode('utf8'))
-                        field_name.append('"' + val['name'] + '"')
+                        if 'status_enumdesc' == val['shortname']:
+                            field_name.append('"Note For Status"')
+                        else:
+                            field_name.append('"' + val['name'] + '"')
                 print field
                 print field_name
                 for name in field_name:
@@ -46,7 +49,7 @@ class TestSpider(scrapy.Spider):
                 print len(field)
                 #print data
                 print len(data)
-                print data[0]
+                print data[2]
                 #url = 'http://www.monolithicpower.com/Desktopmodules/Product/Ajax.ashx?method=getProducts&categoryID=%s&_=%d'
                 #_url = url % (response.meta['CategoryID'], (time.time() * 1000))
         else:
