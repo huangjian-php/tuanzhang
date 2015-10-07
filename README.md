@@ -8,23 +8,23 @@ scrapy学习文档：http://doc.scrapy.org/en/latest/intro/overview.html
 
 原厂名称    原厂网站
 
-NXP         www.nxp.com
+##### NXP         www.nxp.com                                     （OK）
 
-FSL         www.freescale.com
+##### FSL         www.freescale.com                               （OK）
 
-MPS         http://www.monolithicpower.com/
+##### MPS         http://www.monolithicpower.com/                 （OK）
 
-ON          www.onsemi.com
+ON          www.onsemi.com                                   （测试中）
 
-Exar        http://www.exar.com/
+Exar        http://www.exar.com/                             （测试中）
 
-复旦微      http://www.fmsh.com/
+复旦微      http://www.fmsh.com/                             （测试中）
 
 GD          http://www.gigadevice.com
 
 ISSI        http://www.issi.com
 
-HTC         http://www.htckorea.co.kr/chinese/index.php
+##### HTC         http://www.htckorea.co.kr/chinese/index.php     （OK）
 
 ELMOS       http://www.elmos.com/ 
 
