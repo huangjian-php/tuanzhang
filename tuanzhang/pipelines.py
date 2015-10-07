@@ -47,12 +47,12 @@ class  FilesPipeline(files.FilesPipeline):
     def get_media_requests(self, item, info):
         for file_url in item['file_urls']:
             yield scrapy.Request(file_url, cookies={
-                '.ASPXANONYMOUS' : '9bMi0aYq0QEkAAAAZDBjMzQ2Y2YtN2EwYS00ZGVjLWFmZmQtNTlkM2IzNmNlNDRm0',
-                'ASP.NET_SessionId' : 'akutighgwey5ja1x0zakf4k5',
+                '.ASPXANONYMOUS' : 'tEosW6o30QEkAAAANmQ5Yjg4MGEtY2Y5Ny00ZTFjLTgyYTktOGEyNGNkNDVlNTQ10',
+                'ASP.NET_SessionId' : 's5fydptdnlo45utbk2zgz0mg',
                 'authentication' : 'DNN',
                 'dnn_IsMobile' : 'False',
-                '.DOTNETNUKE' : '09C50769BCC212917BB1C2012B064B8A58EF855249ACB4F1989E85CB6247251E3B5C613AC7E86E32F82A7BB064974B9CDFEDCAE7E170DBA635D453C266C0257A70E4665AC23204A400850709F327883F63E0B9C9EC2FCC9C18ADE8777CAB4365BBA5E86BA20327DA1A534EFB37A4DDD320D9752F4B2E44FD065D2C1641839D9F452F44D6',
-                '_ga' : 'GA1.2.1508715189.1442802415',
+                '.DOTNETNUKE' : '240F519DB2458029FC44C84BB5161BA1BF19C48F447DBB4D841FF20A333150E8C73BECC70FF8F87E475FFC89C3A99F8F61D841406471434A34DAC9236FCE9D04C6F1A9A560092614074BB488F9BC32B9BC503A23C9F5BFB64D68C8A92BF733655969B827354220AF63CAB552C8C27A83AC9DA775EA99CBB077E5CEAEE98447A53C011506',
+                '_ga' : 'GA1.2.603964860.1444233118',
                 '_gat' : '1',
                 'language' : 'en-US'
                 }, meta={'filename' : item['filename'][file_url]})
@@ -80,21 +80,3 @@ class  FilesPipeline(files.FilesPipeline):
         item['file_paths'] = file_paths
         return item
 
-
-class  RenamePipeline(object):
-    """Rename"""
-    def open_spider(self, spider):
-        self.json = []
-
-    def process_item(self, item, spider):
-        for file_url in item['file_urls']:
-            path = 'full\\' + item['filename'][file_url] + '.pdf'
-            if os.path.exists(path):
-                path = '(1)' + path
-            
-            self.json.append((item['file_paths'][file_url], path))
-        return item
-
-    def close_spider(self, spider):
-        for k, v in self.json:
-            os.rename(k, v)
