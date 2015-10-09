@@ -10,6 +10,12 @@ class OnSpider(scrapy.Spider):
         'http://www.onsemi.cn/PowerSolutions/products.do',
     )
 
+    def __init__(self):
+        self.fp = codecs.open(u'on/手册/sheet.csv', 'w+', 'utf_8_sig')
+        title = ['"brand"', '"Series"', '"Series-2"', '"PartNo"', '"FileType"', '"Url"']
+        csv_str = ','.join(title) + "\n"
+        self.fp.write(csv_str)
+
     def parse(self, response):
         urls = response.xpath('//table[@id="productMapHome"]').xpath('.//a[contains(@href, "/PowerSolutions/taxonomy.do?id=")]/@href').extract()
         
@@ -39,7 +45,7 @@ class OnSpider(scrapy.Spider):
         param = '&action=setPageSize&actionData=0&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
         csv_lst = response.body.strip('"\n').split('"\n"')
 
-        return scrapy.Request(response.meta['url'] + param, method='POST', callback=self.tertius_parse, meta={'name' : response.meta['name'], 'csv_lst' : csv_lst})
+        return scrapy.Request(response.meta['url'] + param, method='POST', callback=self.quartus_parse, meta={'name' : response.meta['name'], 'csv_lst' : csv_lst})
 
     def quartus_parse(self, response):
         sheet = {
@@ -61,7 +67,7 @@ class OnSpider(scrapy.Spider):
             '软件' : 'software',
             '白皮书' : 'White Papers'
         }
-        sheet_url = 'http://www.onsemi.cn/PowerSolutions/supportDoc.do?type=%s&part=%s'
+        sheet_url = 'http://www.onsemi.cn/PowerSolutions/supportDoc.do?type=%s&part=%s&action=setPageSize&actionData=0&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
         detail_url = 'http://www.onsemi.cn/PowerSolutions/product.do?id=%(id)s'
         csv_lst = response.meta['csv_lst']
         title = '"' + csv_lst[0] + '"'
@@ -70,19 +76,43 @@ class OnSpider(scrapy.Spider):
         del csv_lst[0]
 
         csv_str = ','.join(title) + "\n"
+        path = '//tr[@rpnid="%s"]/td[@class="productDocIcon"]/a/@href'
+        path_2 = '//tr[@class="oddListItem opn_%s opnDetail"]'
 
         for val in csv_lst:
             val = '"' + val + '"'
             val_lst = val.split(',')
             id = val_lst[0]
-            type_num = id.split(' ')[0]
-            val_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"%(id)s"', '"' + detail_url + '"', '"%(dataSheet)s"']
-            csv_str += ','.join(val_lst) + "\n"
+            type_num = id.split(' ')[0].strip('"')
+            dataSheet_url = response.xpath(path % type_num).extract()[0]
+            val_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"%(id)s"', '"' + detail_url + '"', '"' + dataSheet_url + '"']
+            csv_str_tpl = ','.join(val_lst) + "\n"
 
-            for (key,val) in sheet.items():
-                yield scrapy.Request(sheet_url % (val, id), method='POST', callback=self.tertius_parse, meta={'name' : response.meta['name']})
+            for tr in response.xpath(path_2 % type_num):
+                part_num = tr.xpath('./td[2]/text()').extract()
+                if part_num:
+                    part_num = part_num[0]
+                    csv_str += (csv_str_tpl % {'id' : part_num})
+                    for (key,val) in sheet.items():
+                        yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num})
+
+            #break
+
+            
 
         fp = codecs.open('on/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
         fp.write(csv_str)
         fp.close()
 
+    def fifth(self, response):
+        csv_str = ''
+        for tr in response.xpath('//tr[@id]'):
+            if tr.extract():
+                sheet_url = tr.xpath('./td[1]/a/@href').extract()[0]
+                data = ['on', response.meta['name'], response.meta['type_num'], response.meta['part_num'], response.meta['type'], response.urljoin(sheet_url)]
+                csv_str += ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
+               
+        self.fp.write(csv_str) 
+
+    def closed(spider, reason):
+        spider.fp.close()

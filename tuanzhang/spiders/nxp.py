@@ -56,9 +56,7 @@ class NxpSpider(scrapy.Spider):
                 detail_url = tr.xpath('./td[1]/a/@href').extract()[0]
                 name = re.sub(r'\(\s*[0-9]+\s*\)', '', response.meta['name']).strip()
 
-                #detail_url = '/products/identification_and_security/smart_label_and_tag_ics/hitag_reader_ics/HTRC11001T.html'
                 yield scrapy.Request(response.urljoin(detail_url), callback=self.fifth, meta={'name' : name, 'type_number' : type_number})
-                continue
 
                 sheet_url = tr.xpath('./td[4]/a[@title="Download datasheet"]/@href').extract()
                 if sheet_url:
@@ -74,11 +72,8 @@ class NxpSpider(scrapy.Spider):
                     sheet_url
                 ]
 
-                
-                #break
-
             data_url = 'http://www.nxp.com/parametrics/psdata/?p=1&s=0&c=&rpp=&fs=0&sc=&so=&es=&type=initial&i=%s'
-            #yield scrapy.Request(data_url % response.meta['product_id'], callback=self.quartus_parse, meta={'product_info' : product_info, 'name' : name})
+            yield scrapy.Request(data_url % response.meta['product_id'], callback=self.quartus_parse, meta={'product_info' : product_info, 'name' : name})
 
     def quartus_parse(self, response):
         data = json.loads(response.body)
