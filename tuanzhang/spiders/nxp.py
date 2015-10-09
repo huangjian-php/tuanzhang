@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import scrapy
 from tuanzhang.items import CsvDataItem
-import json, re, copy
+import json, re, copy, codecs
 
 
 class NxpSpider(scrapy.Spider):
@@ -10,6 +10,10 @@ class NxpSpider(scrapy.Spider):
     start_urls = (
         'http://www.nxp.com/products/',
     )
+
+    def __init__(self):
+        self.fp = codecs.open(u'nxp/手册/sheet.csv', 'w+', 'utf_8_sig')
+        pass
 
     def parse(self, response):
         for h3 in response.xpath('//div[@class="article-content"]/h3/a'):
@@ -50,12 +54,18 @@ class NxpSpider(scrapy.Spider):
             for tr in table.xpath('.//tr[@class="odd"] | .//tr[@class="even"]'):
                 type_number = tr.xpath('./td[1]/a/text()').extract()[0]
                 detail_url = tr.xpath('./td[1]/a/@href').extract()[0]
+                name = re.sub(r'\(\s*[0-9]+\s*\)', '', response.meta['name']).strip()
+
+                #detail_url = '/products/identification_and_security/smart_label_and_tag_ics/hitag_reader_ics/HTRC11001T.html'
+                yield scrapy.Request(response.urljoin(detail_url), callback=self.fifth, meta={'name' : name, 'type_number' : type_number})
+                continue
+
                 sheet_url = tr.xpath('./td[4]/a[@title="Download datasheet"]/@href').extract()
                 if sheet_url:
                     sheet_url = response.urljoin(sheet_url[0])
                 else:
                     sheet_url = 'No full datasheet available'
-                name = re.sub(r'\(\s*[0-9]+\s*\)', '', response.meta['name']).strip()
+               
                 product_info[type_number] = [
                     'nxp',
                     name,
@@ -63,8 +73,12 @@ class NxpSpider(scrapy.Spider):
                     response.urljoin(detail_url),
                     sheet_url
                 ]
+
+                
+                #break
+
             data_url = 'http://www.nxp.com/parametrics/psdata/?p=1&s=0&c=&rpp=&fs=0&sc=&so=&es=&type=initial&i=%s'
-            return scrapy.Request(data_url % response.meta['product_id'], callback=self.quartus_parse, meta={'product_info' : product_info, 'name' : name})
+            #yield scrapy.Request(data_url % response.meta['product_id'], callback=self.quartus_parse, meta={'product_info' : product_info, 'name' : name})
 
     def quartus_parse(self, response):
         data = json.loads(response.body)
@@ -99,7 +113,7 @@ class NxpSpider(scrapy.Spider):
         #print len(csv_data)
         csv_str = ','.join(['"%s"'] * len(title)) + "\n"
 
-        fp = open('nxp/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+')
+        fp = codecs.open('nxp/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
         n = 1
         fp.write(csv_str % tuple(title))
         for val in csv_data:
@@ -111,3 +125,28 @@ class NxpSpider(scrapy.Spider):
                 fp.flush()
 
         fp.close()
+
+    def fifth(self, response):
+        table = response.xpath('//div[@id="section_linkedDocuments"]/div[@class="article-content"]/table/tbody')
+        tpl = ['"%s"'] * 4
+        csv_str = ''
+        if table:
+            for tr in table.xpath('.//tr'):
+                sheet_url = tr.xpath('./td[1]/a/@href').extract()
+                if sheet_url:
+                    sheet_url = sheet_url[0]
+                else:
+                    sheet_url = tr.xpath('./td[1]/a/@class').extract()[0]
+                    pattern = r"'(/.+?\.(?:pdf|zip))'"
+                    regular = re.compile(pattern, re.DOTALL)
+                    match = regular.findall(sheet_url)
+                    print match
+                    sheet_url = match[0]
+                type = tr.xpath('./td[3]/text()').extract()[0]
+                csv_str += (','.join(tpl) % (response.meta['name'], response.meta['type_number'], type, response.urljoin(sheet_url)) + "\n")
+
+            self.fp.write(csv_str)
+            #self.fp.flush()
+
+    def closed(spider, reason):
+        spider.fp.close()

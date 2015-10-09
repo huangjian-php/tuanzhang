@@ -31,33 +31,17 @@ class OnSpider(scrapy.Spider):
             #print url
             #print c_name
             param = '&action=excelCsv&actionData=undefined&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
-            #param = '&action=setPageSize&actionData=0&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
-            yield scrapy.Request(response.urljoin(url) + param, method='POST', callback=self.tertius_parse, meta={'name' : c_name})
+            
+            yield scrapy.Request(response.urljoin(url) + param, method='POST', callback=self.tertius_parse, meta={'name' : c_name, 'url' : response.urljoin(url)})
             #break
 
     def tertius_parse(self, response):
-        
-        sheet_url = 'http://www.onsemi.cn/PowerSolutions/supportDoc.do?type=%s&part=%s'
-        detail_url = 'http://www.onsemi.cn/PowerSolutions/product.do?id=%s'
+        param = '&action=setPageSize&actionData=0&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
         csv_lst = response.body.strip('"\n').split('"\n"')
-        title = '"' + csv_lst[0] + '"'
-        title = title.split(',')
-        title[0:1] = ['"brand"', '"Series"', '"PartNo"', '"DetailLink"']
-        del csv_lst[0]
 
-        csv_str = ','.join(title) + "\n"
+        return scrapy.Request(response.meta['url'] + param, method='POST', callback=self.tertius_parse, meta={'name' : response.meta['name'], 'csv_lst' : csv_lst})
 
-        for val in csv_lst:
-            val = '"' + val + '"'
-            val_lst = val.split(',')
-            id = val_lst[0]
-            val_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"' + detail_url % id.strip('"') + '"']
-            csv_str += ','.join(val_lst) + "\n"
-        fp = codecs.open('on/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
-        fp.write(csv_str)
-        fp.close()
-
-        
+    def quartus_parse(self, response):
         sheet = {
             '应用注释' : 'AppNotes',
             '辅助小册子' : 'Brochures',
@@ -77,4 +61,28 @@ class OnSpider(scrapy.Spider):
             '软件' : 'software',
             '白皮书' : 'White Papers'
         }
+        sheet_url = 'http://www.onsemi.cn/PowerSolutions/supportDoc.do?type=%s&part=%s'
+        detail_url = 'http://www.onsemi.cn/PowerSolutions/product.do?id=%(id)s'
+        csv_lst = response.meta['csv_lst']
+        title = '"' + csv_lst[0] + '"'
+        title = title.split(',')
+        title[0:1] = ['"brand"', '"Series"', '"Series-2"', '"PartNo"', '"DetailLink"', '"dataSheet"']
+        del csv_lst[0]
+
+        csv_str = ','.join(title) + "\n"
+
+        for val in csv_lst:
+            val = '"' + val + '"'
+            val_lst = val.split(',')
+            id = val_lst[0]
+            type_num = id.split(' ')[0]
+            val_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"%(id)s"', '"' + detail_url + '"', '"%(dataSheet)s"']
+            csv_str += ','.join(val_lst) + "\n"
+
+            for (key,val) in sheet.items():
+                yield scrapy.Request(sheet_url % (val, id), method='POST', callback=self.tertius_parse, meta={'name' : response.meta['name']})
+
+        fp = codecs.open('on/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
+        fp.write(csv_str)
+        fp.close()
 
