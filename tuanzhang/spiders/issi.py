@@ -27,7 +27,7 @@ class IssiSpider(scrapy.Spider):
 
     def secondary_parse(self, response):
         for article in response.xpath('//div[@id="jumpTable"]/article'):
-            if article.xpath('./@class').extract:
+            if article.xpath('./@class').extract():
                 continue
 
             name = response.meta['name'] + '-' + article.xpath('./h2/a/text()').extract()[0]
