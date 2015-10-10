@@ -84,10 +84,9 @@ class OnSpider(scrapy.Spider):
             val_lst = val.split(',')
             id = val_lst[0]
             type_num = id.split(' ')[0].strip('"')
-            dataSheet_url = response.xpath(path % type_num).extract()
-            if dataSheet_url:
-                dataSheet_url = dataSheet_url[0]
-            else:
+            try:
+                dataSheet_url = response.xpath(path % type_num).extract()[0]
+            except:
                 dataSheet_url = '-'
             val_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"%(id)s"', '"' + detail_url + '"', '"' + dataSheet_url + '"']
             csv_str_tpl = ','.join(val_lst) + "\n"
