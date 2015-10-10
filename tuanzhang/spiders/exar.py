@@ -10,4 +10,10 @@ class ExarSpider(scrapy.Spider):
     )
 
     def parse(self, response):
-        pass
+        crawl_list = {
+            'Power Management-Universal PMICs' : 'http://www.exar.com/power-management/universal-pmics/',
+            'Power Management-Power Modules' : 'http://www.exar.com/power-management/power-modules/',
+            'Power Management-Power Conversion' : 'http://www.exar.com/power-management/power-conversion/',
+            'Power Management-System Controls' : 'http://www.exar.com/power-management/system-controls/',
+            'Power Management-LED Lighting' : 'http://www.exar.com/power-management/led-lighting/',
+        }

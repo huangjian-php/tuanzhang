@@ -18,8 +18,13 @@ class OnSpider(scrapy.Spider):
 
     def parse(self, response):
         urls = response.xpath('//table[@id="productMapHome"]').xpath('.//a[contains(@href, "/PowerSolutions/taxonomy.do?id=")]/@href').extract()
+        special = []
         
         for url in urls:
+            print url
+            if url.find('type=Family'):
+                special.append(url)
+                continue
             yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse)
             #break
 
@@ -46,6 +51,10 @@ class OnSpider(scrapy.Spider):
         csv_lst = response.body.strip('"\n').split('"\n"')
 
         return scrapy.Request(response.meta['url'] + param, method='POST', callback=self.quartus_parse, meta={'name' : response.meta['name'], 'csv_lst' : csv_lst})
+
+        #fp = open('on/sheet/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+')
+        #fp.write(response.body)
+        #fp.close()
 
     def quartus_parse(self, response):
         sheet = {
