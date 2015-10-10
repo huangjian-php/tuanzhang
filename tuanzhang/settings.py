@@ -92,4 +92,4 @@ FILES_STORE = '/home/wwwroot/default/tuanzhang'
 #HTTPCACHE_STORAGE='scrapy.extensions.httpcache.FilesystemCacheStorage'
 
 # LOG
-#LOG_LEVEL='WARNING'
+LOG_LEVEL='WARNING'
