@@ -63,6 +63,8 @@ class ExarSpider(scrapy.Spider):
             break
 
     def tertius_parse(self, response):
-        print response.meta
-        print response.url
+        title = response.xpath('//td[@class="option-header"]/text()').extract()
+        print title
+        for tr in response.xpath('//tr[@class]'):
+            print tr.xpath('./td/text()').extract()
 
