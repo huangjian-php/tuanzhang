@@ -14,23 +14,23 @@ scrapy学习文档：http://doc.scrapy.org/en/latest/intro/overview.html
 
 ##### MPS         http://www.monolithicpower.com/                 （OK）
 
-ON          www.onsemi.com                                   （测试中）
+##### ON          www.onsemi.com                                   （OK）
 
-Exar        http://www.exar.com/                             （测试中）
+##### Exar        http://www.exar.com/                             （OK）
 
-复旦微      http://www.fmsh.com/                             （测试中）
+##### 复旦微      http://www.fmsh.com/                             （OK）
 
-GD          http://www.gigadevice.com
+GD          http://www.gigadevice.com                        （测试中）
 
-ISSI        http://www.issi.com
+##### ISSI        http://www.issi.com                              （OK）
 
-##### HTC         http://www.htckorea.co.kr/chinese/index.php     （OK）
+##### HTC         http://www.htckorea.co.kr/chinese/index.php      （OK）
 
-ELMOS       http://www.elmos.com/ 
+##### ELMOS       http://www.elmos.com/                            （OK）
 
-MXIC        http://www.macronix.com
+##### MXIC        http://www.macronix.com                          （OK）
 
-IR          http://www.irf.com.cn
+IR          http://www.irf.com.cn                            （测试中）  
 
 以上网站为需要爬取的网站，按先后顺序。
 

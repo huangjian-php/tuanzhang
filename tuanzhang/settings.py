@@ -93,3 +93,4 @@ FILES_STORE = '/home/wwwroot/default/tuanzhang'
 
 # LOG
 LOG_LEVEL='WARNING'
+#LOG_LEVEL='INFO'

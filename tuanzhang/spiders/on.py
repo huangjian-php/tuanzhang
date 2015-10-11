@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import re, csv, codecs
+import re, csv, codecs, re, copy
 
 
 class OnSpider(scrapy.Spider):
@@ -19,11 +19,13 @@ class OnSpider(scrapy.Spider):
     def parse(self, response):
         urls = response.xpath('//table[@id="productMapHome"]').xpath('.//a[contains(@href, "/PowerSolutions/taxonomy.do?id=")]/@href').extract()
         special = []
+        pattern = 'type=Family'
+        regular = re.compile(pattern, re.DOTALL)
         
         for url in urls:
-            print url
-            if url.find('type=Family'):
+            if regular.findall(url):
                 special.append(url)
+                print url
                 continue
             yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse)
             #break
@@ -66,7 +68,6 @@ class OnSpider(scrapy.Spider):
             '设计和开发工具' : 'tools',
             'Errata' : 'Errata/Addendum',
             '评估板文档' : 'boards',
-            '评估/开发工具' : '',
             '封装图纸' : 'drawing',
             '参考设计' : 'Reference Designs', 
             '参考手册' : 'manuals',
@@ -77,7 +78,7 @@ class OnSpider(scrapy.Spider):
             '白皮书' : 'White Papers'
         }
         sheet_url = 'http://www.onsemi.cn/PowerSolutions/supportDoc.do?type=%s&part=%s&action=setPageSize&actionData=0&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
-        detail_url = 'http://www.onsemi.cn/PowerSolutions/product.do?id=%(id)s'
+        detail_url = 'http://www.onsemi.cn/PowerSolutions/product.do?id=%s'
         csv_lst = response.meta['csv_lst']
         title = '"' + csv_lst[0] + '"'
         title = title.split(',')
@@ -97,14 +98,15 @@ class OnSpider(scrapy.Spider):
                 dataSheet_url = response.xpath(path % type_num).extract()[0]
             except:
                 dataSheet_url = '-'
-            val_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"%(id)s"', '"' + detail_url + '"', '"' + dataSheet_url + '"']
-            csv_str_tpl = ','.join(val_lst) + "\n"
+            #val_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"%s"', '"' + detail_url + '"', '"' + dataSheet_url + '"']
 
             for tr in response.xpath(path_2 % type_num):
                 part_num = tr.xpath('./td[2]/text()').extract()
                 if part_num:
                     part_num = part_num[0]
-                    csv_str += (csv_str_tpl % {'id' : part_num})
+                    copy_lst = copy.deepcopy(val_lst)
+                    copy_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"' + part_num + '"', '"' + (detail_url % part_num) + '"', '"' + dataSheet_url + '"']
+                    csv_str += ','.join(copy_lst) + "\n"
                     for (key,val) in sheet.items():
                         yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num})
 
