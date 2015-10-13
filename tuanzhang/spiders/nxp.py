@@ -132,7 +132,7 @@ class NxpSpider(scrapy.Spider):
                     sheet_url = sheet_url[0]
                 else:
                     sheet_url = tr.xpath('./td[1]/a/@class').extract()[0]
-                    pattern = r"'(/.+?\.(?:pdf|zip))'"
+                    pattern = r"docurl:'(/.+?\.(?:pdf|zip))'"
                     regular = re.compile(pattern, re.DOTALL)
                     match = regular.findall(sheet_url)
                     print match
