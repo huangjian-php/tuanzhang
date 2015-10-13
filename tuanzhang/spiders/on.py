@@ -107,8 +107,8 @@ class OnSpider(scrapy.Spider):
                     desc = tr.xpath('./td[6]/a/text()').extract()[0].strip()
                     copy_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"' + part_num + '"', '"' + (detail_url % part_num) + '"', '"' + dataSheet_url + '"', '"' + desc + '"']
                     csv_str += ','.join(copy_lst) + "\n"
-                    #for (key,val) in sheet.items():
-                        #yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num})
+                    for (key,val) in sheet.items():
+                        yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num})
 
             #break
 
