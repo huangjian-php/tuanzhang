@@ -55,6 +55,7 @@ class NxpSpider(scrapy.Spider):
                 type_number = tr.xpath('./td[1]/a/text()').extract()[0]
                 detail_url = tr.xpath('./td[1]/a/@href').extract()[0]
                 name = re.sub(r'\(\s*[0-9]+\s*\)', '', response.meta['name']).strip()
+                desc = tr.xpath('./td[2]/text()').extract()[0]
 
                 yield scrapy.Request(response.urljoin(detail_url), callback=self.fifth, meta={'name' : name, 'type_number' : type_number})
 
@@ -69,7 +70,8 @@ class NxpSpider(scrapy.Spider):
                     name,
                     type_number,
                     response.urljoin(detail_url),
-                    sheet_url
+                    sheet_url,
+                    desc
                 ]
 
             data_url = 'http://www.nxp.com/parametrics/psdata/?p=1&s=0&c=&rpp=&fs=0&sc=&so=&es=&type=initial&i=%s'
@@ -82,7 +84,7 @@ class NxpSpider(scrapy.Spider):
         title = []
         for t in filters:
             title.append(re.sub(r'</?sub>', '', t['f']).strip())
-        title[0:1] = ['brand', 'Series', 'PartNo', 'DetailLink', 'dataSheet']
+        title[0:1] = ['brand', 'Series', 'PartNo', 'DetailLink', 'dataSheet', 'Description']
 
         i = 0
         csv_data = []

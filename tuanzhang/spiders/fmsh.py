@@ -10,6 +10,11 @@ class FmshSpider(scrapy.Spider):
         'http://www.fmsh.com/products.shtml',
     )
 
+    def  __init__(self):
+        self.sheet = codecs.open(u'fmsh/手册/sheet.csv', 'w+', 'utf_8_sig')
+        title = ['brand', 'Series', 'PartNo', 'Type', 'Url']
+        self.sheet.write(','.join(['"%s"'] * len(title)) % tuple(title) + "\n")
+
     def parse(self, response):
         for dl in response.xpath('//div[@class="products"]/dl'):
             name = dl.xpath('./dt/a/text()').extract()[0]
@@ -27,31 +32,35 @@ class FmshSpider(scrapy.Spider):
     def secondary_parse(self, response):
         pattern = r'var data = \s*\'(.+?)\';'
         regular = re.compile(pattern, re.DOTALL)
-        title = ['brand', 'Series', 'PartNo', 'dataSheet'] + regular.findall(response.body)[0].split(',')
-        csv_str = ','.join(['"%s"'] * len(title)) % tuple(title) + "\n"
+        head = regular.findall(response.body)
+        if head:
+            title = ['brand', 'Series', 'PartNo', 'DetailLink', 'dataSheet'] + head[0].split(',')
+            csv_str = ','.join(['"%s"'] * len(title)) % tuple(title) + "\n"
+            sheet_str = ''
 
-        for tr in response.xpath('//tr[@class="xunhuan"]'):
-            type_num = tr.xpath('./td[1]/a/text()').extract()[0]
-            sheet_url = tr.xpath('./td[1]/a/@href').extract()[0]
-            data = []
-            for td in tr.xpath('./td'):
-                text = td.xpath('./text()').extract()
-                if text:
-                    data.append(text[0])
-                else:
-                    data.append('-')
-            del data[0]
-            del data[0]
-            data = ['fmsh', response.meta['name'], type_num, response.urljoin(sheet_url)] + data
-            tpl = ['"%s"'] * len(data)
-            csv_str += ','.join(tpl) % tuple(data) + "\n"
+            for tr in response.xpath('//tr[@class="xunhuan"]'):
+                type_num = tr.xpath('./td[1]/a/text()').extract()[0]
+                sheet_url = tr.xpath('./td[1]/a/@href').extract()[0]
+                data = []
+                for td in tr.xpath('./td'):
+                    text = td.xpath('./text()').extract()
+                    if text:
+                        data.append(text[0])
+                    else:
+                        data.append('-')
+                del data[0]
+                del data[0]
+                data = ['fmsh', response.meta['name'], type_num, response.url, response.urljoin(sheet_url)] + data
+                tpl = ['"%s"'] * len(data)
+                csv_str += ','.join(tpl) % tuple(data) + "\n"
+                sheet_data = ['fmsh', response.meta['name'], type_num, 'Datasheet', response.urljoin(sheet_url)]
+                sheet_str += ','.join(['"%s"'] * len(sheet_data)) % tuple(sheet_data) + "\n"
 
-        fp = codecs.open('fmsh/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
-        fp.write(csv_str)
-        fp.close()
+            self.sheet.write(sheet_str)
 
-
-        #for table in response.xpath('//table[@class="subproslist"]/tbody/tr'):
+            fp = codecs.open('fmsh/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
+            fp.write(csv_str)
+            fp.close()
 
 
     def tertius_parse(self, response):
@@ -68,5 +77,7 @@ class FmshSpider(scrapy.Spider):
                 #break
             #break
 
+    def closed(spider, reason):
+        spider.sheet.close()
 
 

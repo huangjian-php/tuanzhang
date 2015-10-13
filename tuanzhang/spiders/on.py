@@ -29,11 +29,12 @@ class OnSpider(scrapy.Spider):
                 continue
             yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse)
             #break
-
+        
     def secondary_parse(self, response):
         name = response.xpath('//h1[@class="taxonomyTitle"]/text()').extract()[0].strip()
         name = re.sub(r'\s*\[.+\]\s*', '', name)
         a_tag = response.xpath('//a[@style="color:#fff;font-size:14px;"]')
+
         for val in a_tag:
             url = val.xpath('./@href').extract()[0]
             c_name = val.xpath('./text()').extract()
@@ -41,8 +42,6 @@ class OnSpider(scrapy.Spider):
                 c_name = name + '-' + val.xpath('./sub/text()').extract()[0].join(c_name).strip()
             else:
                 c_name = name + '-' + c_name[0].strip()
-            #print url
-            #print c_name
             param = '&action=excelCsv&actionData=undefined&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
             
             yield scrapy.Request(response.urljoin(url) + param, method='POST', callback=self.tertius_parse, meta={'name' : c_name, 'url' : response.urljoin(url)})
@@ -105,7 +104,7 @@ class OnSpider(scrapy.Spider):
                 if part_num:
                     part_num = part_num[0]
                     copy_lst = copy.deepcopy(val_lst)
-                    desc = tr.xpath('./td[5]/text()').extract()[0]
+                    desc = tr.xpath('./td[6]/a/text()').extract()[0].strip()
                     copy_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"' + part_num + '"', '"' + (detail_url % part_num) + '"', '"' + dataSheet_url + '"', '"' + desc + '"']
                     csv_str += ','.join(copy_lst) + "\n"
                     #for (key,val) in sheet.items():

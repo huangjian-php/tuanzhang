@@ -23,6 +23,9 @@ class MxicSpider(scrapy.Spider):
             'ROM (Read-Only Memory)' : 'http://www.macronix.com/CachePages/en-us-Product-ROM-default.aspx#128Mb',
             'PCN/EOL' : 'http://www.macronix.com/CachePages/en-us-Product-PCNEOL-default.aspx'
         }
+        self.sheet = codecs.open(u'mxic/手册/sheet.csv', 'w+', 'utf_8_sig')
+        title = ['brand', 'Series', 'PartNo', 'Type', 'Url']
+        self.sheet.write(','.join(['"%s"'] * len(title)) % tuple(title) + "\n")
 
     def parse(self, response):
         for (name,url) in self.crawl_list.items():
@@ -54,6 +57,7 @@ class MxicSpider(scrapy.Spider):
                         data.append('-')
                 data = ['mxic', response.meta['name'], part_num, response.urljoin(detail_url), response.urljoin(sheet_url)] + data
                 csv_str += ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
+                yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'part_num' : part_num})
             fp.write(csv_str)
             fp.close()
         elif 'NOR Flash-MCP' == response.meta['name'] or 'NAND Flash-MCP' == response.meta['name']:
@@ -72,6 +76,7 @@ class MxicSpider(scrapy.Spider):
             fp = codecs.open(u'mxic/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
             fp.write(','.join(['"%s"'] * len(title)) % tuple(title) + "\n")
             csv_str = ''
+            sheet_str = ''
             for tr in table.xpath('.//tr[position()>1]'):
                 if len(tr.xpath('./td').extract()) < 2:
                     continue
@@ -88,8 +93,12 @@ class MxicSpider(scrapy.Spider):
                         data.append(' '.join(text))
                     else:
                         data.append('-')
-                data = ['mxic', response.meta['name'], part_num, '-', sheet_url] + data
+                data = ['mxic', response.meta['name'], part_num, response.url, sheet_url] + data
                 csv_str += ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
+                if '-' != sheet_url:
+                    sheet_data = ['mxic', response.meta['name'], part_num, 'Datasheets', sheet_url]
+                    sheet_str += ','.join(['"%s"'] * len(sheet_data)) % tuple(sheet_data) + "\n"
+            self.sheet.write(sheet_str)
             fp.write(csv_str)
             fp.close()
         else:
@@ -130,5 +139,17 @@ class MxicSpider(scrapy.Spider):
                             data.append('-')
                     data = ['mxic', response.meta['name'], part_num, response.urljoin(detail_url), sheet_url, vol] + data
                     csv_str += ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
+                    yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'part_num' : part_num})
             fp.write(csv_str)
             fp.close()
+
+    def tertius_parse(self, response):
+        sheet_str = ''
+        for div in response.xpath('/div[re:test(@id, "T[1-6]")]'):
+            type = div.xpath('.//tr[1]/td/span/text()').extract()[0]
+            urls = div.xpath('.//tr[2]/td/a/@href').extract()
+            sheet_data = ['mxic', response.meta['name'], response.meta['part_num'], type] + urls
+            sheet_str += ','.join(['"%s"'] * len(sheet_data)) % tuple(sheet_data) + "\n"
+
+    def closed(spider, reason):
+        spider.sheet.close()

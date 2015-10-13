@@ -10,6 +10,11 @@ class IssiSpider(scrapy.Spider):
         'http://www.issi.com/US/Index.shtml',
     )
 
+    def  __init__(self):
+        self.sheet = codecs.open(u'issi/手册/sheet.csv', 'w+', 'utf_8_sig')
+        title = ['brand', 'Series', 'PartNo', 'Type', 'Url']
+        self.sheet.write(','.join(['"%s"'] * len(title)) % tuple(title) + "\n")
+
     def parse(self, response):
         path = './ul[%s]/li/a'
         for li in response.xpath('//div[@class="products-nav"]/ul/li'):
@@ -40,9 +45,9 @@ class IssiSpider(scrapy.Spider):
                 else:
                     k += 1
             del title[k]
-            title = ['brand', 'Series', 'PartNo', 'dataSheet'] + title
+            title = ['brand', 'Series', 'PartNo', 'DetailLink', 'dataSheet'] + title
             csv_str = ','.join(['"%s"'] * len(title)) % tuple(title) + "\n"
-
+            sheet_str = ''
             
             for tr in article.xpath('./table//tr'):
                 data = []
@@ -68,12 +73,17 @@ class IssiSpider(scrapy.Spider):
                         dataSheet = response.urljoin(dataSheet[0])
                     else:
                         dataSheet = '-'
-                    data = ['issi', name, type_num, dataSheet] + data
+                    data = ['issi', name, type_num, response.url, dataSheet] + data
                     tpl = ['"%s"'] * len(data)
                     csv_str += ','.join(tpl) % tuple(data) + "\n"
+                    sheet_data = ['issi', name, type_num, 'Datasheets', dataSheet]
+                    sheet_str += ','.join(['"%s"'] * len(sheet_data)) % tuple(sheet_data) + "\n"
 
+            self.sheet.write(sheet_str)
             fp = codecs.open('issi/main/' + re.sub(r'[/:|?*"\\<>]', '&', name) + '.csv', 'w+', 'utf_8_sig')
             fp.write(csv_str)
             fp.close()
 
+    def closed(spider, reason):
+        spider.sheet.close()
 
