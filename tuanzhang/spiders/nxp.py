@@ -55,7 +55,13 @@ class NxpSpider(scrapy.Spider):
                 type_number = tr.xpath('./td[1]/a/text()').extract()[0]
                 detail_url = tr.xpath('./td[1]/a/@href').extract()[0]
                 name = re.sub(r'\(\s*[0-9]+\s*\)', '', response.meta['name']).strip()
-                desc = tr.xpath('./td[2]/text()').extract()[0]
+                desc = tr.xpath('./td[2]/text()').extract()
+                if desc:
+                    desc = desc[0]
+                else:
+                    desc = '-'
+                    print type_number
+                    print response.url
 
                 yield scrapy.Request(response.urljoin(detail_url), callback=self.fifth, meta={'name' : name, 'type_number' : type_number})
 

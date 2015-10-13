@@ -9,11 +9,15 @@ class SheetSpider(scrapy.Spider):
         'http://www.htckorea.co.kr/chinese/sub02.php',
     )
     def __init__(self):
-        self.fp = open('htc/htc.csv', 'w+')
+        self.fp = open('htc/main/htc.csv', 'w+')
         title = ['brand', 'Series', 'PartNo', 'DetailLink', 'dataSheet']
         tpl = ['"%s"'] * len(title)
         self.fp.write((','.join(tpl) % tuple(title)) + "\n")
-        self.n = 1
+
+        self.fp1 = open(u'htc/手册/sheet.csv', 'w+')
+        title = ['brand', 'Series', 'PartNo', 'Tpye', 'Url']
+        tpl = ['"%s"'] * len(title)
+        self.fp1.write((','.join(tpl) % tuple(title)) + "\n")
 
     def parse(self, response):
         #test = response.xpath('//td/a/strong/text() | //td/strong/a/text() | //td/p/strong/a/text()').extract()
@@ -43,9 +47,11 @@ class SheetSpider(scrapy.Spider):
         data = ['htc', title, response.meta['sn'], response.url] + pdf_url
         tpl = ['"%s"'] * len(data)
         self.fp.write((','.join(tpl) % tuple(data)) + "\n")
-        self.n += 1
-        if self.n > 20:
-            self.fp.flush()
+
+        data = ['htc', title, response.meta['sn'], 'dataSheet'] + pdf_url
+        tpl = ['"%s"'] * len(data)
+        self.fp1.write((','.join(tpl) % tuple(data)) + "\n")
 
     def closed(spider, reason):
         spider.fp.close()
+        spider.fp1.close()
