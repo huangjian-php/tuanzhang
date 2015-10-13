@@ -82,7 +82,7 @@ class OnSpider(scrapy.Spider):
         csv_lst = response.meta['csv_lst']
         title = '"' + csv_lst[0] + '"'
         title = title.split(',')
-        title[0:1] = ['"brand"', '"Series"', '"Series-2"', '"PartNo"', '"DetailLink"', '"dataSheet"']
+        title[0:1] = ['"brand"', '"Series"', '"Series-2"', '"PartNo"', '"DetailLink"', '"dataSheet"', '"Descrption"']
         del csv_lst[0]
 
         csv_str = ','.join(title) + "\n"
@@ -105,10 +105,11 @@ class OnSpider(scrapy.Spider):
                 if part_num:
                     part_num = part_num[0]
                     copy_lst = copy.deepcopy(val_lst)
-                    copy_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"' + part_num + '"', '"' + (detail_url % part_num) + '"', '"' + dataSheet_url + '"']
+                    desc = tr.xpath('./td[5]/text()').extract()[0]
+                    copy_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"' + part_num + '"', '"' + (detail_url % part_num) + '"', '"' + dataSheet_url + '"', '"' + desc + '"']
                     csv_str += ','.join(copy_lst) + "\n"
-                    for (key,val) in sheet.items():
-                        yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num})
+                    #for (key,val) in sheet.items():
+                        #yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num})
 
             #break
 
