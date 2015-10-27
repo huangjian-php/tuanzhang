@@ -68,7 +68,7 @@ class FslSpider(scrapy.Spider):
                 #yield scrapy.Request(response.urljoin(pro['ProdCode']['documentationURL']), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'type_number' : pro['ProdCode']['Name']})
 
     def tertius_parse(self, response):
-        head = '"FSL"' + ','.join(['"%s"'] * 2) % (response.meta['name'], response.meta['type_number'])
+        head = '"FSL",' + ','.join(['"%s"'] * 2) % (response.meta['name'], response.meta['type_number'])
         csv_str = ''
         ProdCode = response.meta['ProdCode']
         for section in response.xpath('//section'):
@@ -82,7 +82,7 @@ class FslSpider(scrapy.Spider):
             tpl = ['"%s"'] * 4
             for val in ProdCode:
                 for title, url in urls.items():
-                    csv_str += (head + ','.join(tpl) % (val, name, title, url) + "\n")
+                    csv_str += (head + ',' + ','.join(tpl) % (val, name, title, url) + "\n")
 
         self.sheet.write(csv_str)
         self.sheet.flush()
