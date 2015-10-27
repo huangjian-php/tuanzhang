@@ -69,19 +69,21 @@ class FslSpider(scrapy.Spider):
                 #yield scrapy.Request(response.urljoin(pro['ProdCode']['documentationURL']), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'type_number' : pro['ProdCode']['Name']})
 
     def tertius_parse(self, response):
-        head = ','.join(['"%s"'] * 2) % (response.meta['name'], response.meta['type_number'])
+        head = '"FSL"' + ','.join(['"%s"'] * 2) % (response.meta['name'], response.meta['type_number'])
         csv_str = ''
         ProdCode = response.meta['ProdCode']
         for section in response.xpath('//section'):
             name = section.xpath('./h2/text()').extract()[0]
-            urls = [name]
+            urls = {}
             for tr in section.xpath('./table/tbody/tr'):
                 url = tr.xpath('./td[1]/ul[1]/li/a/@href').extract()[0]
-                urls.append(url)
+                title = tr.xpath('./td[1]/ul[1]/li/a/h3/text()').extract()[0].strip()
+                urls[title] = url
 
-            tpl = ['"%s"'] * len(urls)
+            tpl = ['"%s"'] * 4
             for val in ProdCode:
-                csv_str += (head + ',"' + val + '",' + (','.join(tpl) % tuple(urls) + "\n"))
+                for title, url in urls.items():
+                    csv_str += (head + ','.join(tpl) % (val, name, title, url) + "\n")
 
         self.sheet.write(csv_str)
         self.sheet.flush()
