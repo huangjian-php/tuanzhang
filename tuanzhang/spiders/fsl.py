@@ -69,7 +69,6 @@ class FslSpider(scrapy.Spider):
 
     def tertius_parse(self, response):
         head = '"FSL",' + ','.join(['"%s"'] * 2) % (response.meta['name'], response.meta['type_number'])
-        csv_str = ''
         ProdCode = response.meta['ProdCode']
         for section in response.xpath('//section'):
             name = section.xpath('./h2/text()').extract()[0]
@@ -81,11 +80,12 @@ class FslSpider(scrapy.Spider):
 
             tpl = ['"%s"'] * 4
             for val in ProdCode:
+                csv_str = ''
                 for title, url in urls.items():
                     csv_str += (head + ',' + ','.join(tpl) % (val, name, title, url) + "\n")
 
-        self.sheet.write(csv_str)
-        self.sheet.flush()
+                    self.sheet.write(csv_str)
+                    self.sheet.flush()
 
     def quartus_parse(self, response):
         data = json.loads(response.body)
