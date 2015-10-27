@@ -15,7 +15,6 @@ class FslSpider(scrapy.Spider):
         self.fp = {}
 
     def parse(self, response):
-        uls = response.xpath('//div[@id="prodMenu"]/div/ul')
         url = 'http://www.freescale.com/webapp/search/loadJSON.sp?c=%s&lang_cd=zh-Hans'
         for ul in response.xpath('//div[@id="prodMenu"]/div/ul'):
             for li in ul.xpath('./li'):
