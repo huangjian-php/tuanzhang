@@ -13,6 +13,7 @@ class FslSpider(scrapy.Spider):
     def __init__(self):
         self.sheet = codecs.open(u'fsl/手册/sheet.csv', 'w+', 'utf_8_sig')
         self.fp = {}
+        self.cnt = 0
 
     def parse(self, response):
         url = 'http://www.freescale.com/webapp/search/loadJSON.sp?c=%s&lang_cd=zh-Hans'
@@ -82,10 +83,12 @@ class FslSpider(scrapy.Spider):
             for val in ProdCode:
                 csv_str = ''
                 for title, url in urls.items():
-                    csv_str += (head + ',' + ','.join(tpl) % (val, name, title, url) + "\n")
+                    csv_str = (head + ',' + ','.join(tpl) % (val, name, title, url) + "\n")
 
                     self.sheet.write(csv_str)
-                    self.sheet.flush()
+                    self.cnt += 1
+                    if 0 == self.cnt % 30:
+                        self.sheet.flush()
 
     def quartus_parse(self, response):
         data = json.loads(response.body)
