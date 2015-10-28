@@ -149,6 +149,7 @@ class MxicSpider(scrapy.Spider):
         for div in response.xpath('//div[re:test(@id, "T[1-6]")]'):
             type = div.xpath('.//tr[1]/td/span/text()').extract()[0]
             urls = div.xpath('.//tr[2]/td/a/@href').extract()
+            urls = map(response.urljoin, urls)
             sheet_data = ['mxic', response.meta['name'], response.meta['part_num'], type] + urls
             sheet_str += (','.join(['"%s"'] * len(sheet_data)) % tuple(sheet_data) + "\n")
         self.sheet.write(sheet_str)
