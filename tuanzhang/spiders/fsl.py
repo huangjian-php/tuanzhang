@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
-import urlparse, json, re, codecs
+import urlparse, json, re, codecs, os
 
 
 class FslSpider(scrapy.Spider):
@@ -12,7 +12,6 @@ class FslSpider(scrapy.Spider):
 
     def __init__(self):
         self.sheet = codecs.open(u'fsl/手册/sheet.csv', 'w+', 'utf_8_sig')
-        self.fresh = []
         self.fp = {}
         self.cnt = 0
 
@@ -69,7 +68,9 @@ class FslSpider(scrapy.Spider):
     def tertius_parse(self, response):
         head = '"FSL",' + ','.join(['"%s"'] * 2) % (response.meta['name'], response.meta['type_number'])
         ProdCode = response.meta['ProdCode']
+        sheet = codecs.open(u'fsl/手册/tmp/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['type_number']) + '.csv', 'w+', 'utf_8_sig')
         for section in response.xpath('//section'):
+            csv_str = ''
             name = section.xpath('./h2/text()').extract()[0]
             urls = {}
             for tr in section.xpath('./table/tbody/tr'):
@@ -79,10 +80,20 @@ class FslSpider(scrapy.Spider):
 
             tpl = ['"%s"'] * 4
             for val in ProdCode:
-                csv_str = ''
+                if 'MK21DN512AVLK5' == val.strip():
+                    print val
+                cnt = 0
+                #csv_str = ''
                 for title, url in urls.items():
-                    csv_str = (head + ',' + ','.join(tpl) % (val, name, title, url) + "\n")
-                    self.fresh.append(csv_str)
+                    csv_str += (head + ',' + ','.join(tpl) % (val, name, title, url) + "\n")
+                    cnt += 1
+                    if cnt > 20:
+                        sheet.write(csv_str)
+                        csv_str = ''
+                        cnt = 0
+            if csv_str:
+                sheet.write(csv_str)
+        sheet.close()
 
     def quartus_parse(self, response):
         data = json.loads(response.body)
@@ -118,18 +129,10 @@ class FslSpider(scrapy.Spider):
             ProdName = pro['ProdName']
         self.fp[response.meta['name']].write(csv_str)
         self.fp[response.meta['name']].flush()
-        if response.meta['doc_url']:
+        if response.meta['doc_url'] and not os.path.exists(u'fsl/手册/' + re.sub(r'[/:|?*"\\<>]', '&', ProdName) + '.csv'):
             yield scrapy.Request(response.meta['doc_url'], callback=self.tertius_parse, meta={'name' : response.meta['name'], 'type_number' : ProdName, 'ProdCode' : ProdCode}, dont_filter=True)
 
     def closed(spider, reason):
+        spider.sheet.close()
         for val in spider.fp:
             spider.fp[val].close()
-
-        for csv_str in spider.fresh:
-            spider.sheet.write(csv_str)
-            spider.cnt += 1
-            if 0 == spider.cnt % 30:
-                spider.cnt = 0
-                spider.sheet.flush()
-
-        spider.sheet.close()
