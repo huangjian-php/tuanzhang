@@ -68,7 +68,7 @@ class ExarSpider(scrapy.Spider):
                 title = []
                 for th in table_inside.xpath('.//tr[1]/th'):
                     title.append(' '.join(th.xpath('./text()').extract()))
-                title[0:1] = ['brand', 'Series', 'PartNo', 'DetailLink']
+                title[0:1] = ['brand', 'Series', 'PartNo', 'DataSheet', 'DetailLink']
 
                 fp = codecs.open('exar/main/' + re.sub(r'[/:|?*"\\<>]', '&', c_name) + ('-%s.csv' % i), 'w+', 'utf_8_sig')
                 fp.write(','.join(['"%s"'] * len(title)) % tuple(title) + "\n")
@@ -81,7 +81,7 @@ class ExarSpider(scrapy.Spider):
                     data = []
                     for td in tr.xpath('.//td[position() > 1]'):
                         data.append(' '.join(td.xpath('./text()').extract()))
-                    data = ['exar', c_name, part_num, response.urljoin(detail_url)] + data
+                    data = ['exar', c_name, part_num, '-', response.urljoin(detail_url)] + data
                     tpl = ['"%s"'] * len(data)
                     csv_str += ((','.join(tpl) % tuple(data)) + "\n")
                     sheet_str = ''
@@ -176,14 +176,14 @@ class ExarSpider(scrapy.Spider):
                 sheet_url = response.xpath('//a[contains(@href, "datasheet")]/@href').extract()
                 sheet_url = sheet_url[0] if sheet_url else '-'
 
-                csv_data = ['exar', response.meta['name'], type_num, part_num, response.url] + response.meta['params']
+                csv_data = ['exar', response.meta['name'], type_num, part_num, response.urljoin(sheet_url), response.url] + response.meta['params']
                 tpl = ['"%s"'] * len(csv_data)
                 csv_str += ((','.join(tpl) % tuple(csv_data)) + "\n")
                 series = response.meta['series']
 
                 if self.doc[series].has_key(type_num):
                     for val in self.doc[series][type_num]:
-                        sheet_data = ['exar', response.meta['name'], type_num, part_num, val['type'], response.urljoin(sheet_url), val['sheet_url']]
+                        sheet_data = ['exar', response.meta['name'], type_num, part_num, val['type'], val['sheet_url']]
                         tpl = ['"%s"'] * len(sheet_data)
                         sheet_str += ((','.join(tpl) % tuple(sheet_data)) + "\n")
         self.fp[response.meta['name']].write(csv_str)
