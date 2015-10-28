@@ -139,7 +139,7 @@ class ExarSpider(scrapy.Spider):
                 text_list = div_table[k - 1].xpath('./div/div[@class="subcategory-header"]/div[1]/text()').extract()
                 c_name = name + '-' + ' '.join(text_list).strip()
 
-                title = ['brand', 'Series', 'Series-2', 'PartNo', 'DetailLink', 'Description']
+                title = ['brand', 'Series', 'Series-2', 'PartNo', 'DataSheet', 'DetailLink', 'Description']
                 for a in div_table[k - 1].xpath('./div/table//a[@class="column-header"]'):
                     title.append(' '.join(a.xpath('./text()').extract()))
 
@@ -173,7 +173,8 @@ class ExarSpider(scrapy.Spider):
             text = tr.xpath('./td[1]/text()').extract()
             if text:
                 part_num = text[0]
-                
+                sheet_url = response.xpath('//a[contains(@href, "datasheet")]/@href').extract()[0]
+
                 csv_data = ['exar', response.meta['name'], type_num, part_num, response.url] + response.meta['params']
                 tpl = ['"%s"'] * len(csv_data)
                 csv_str += ((','.join(tpl) % tuple(csv_data)) + "\n")
@@ -181,7 +182,7 @@ class ExarSpider(scrapy.Spider):
 
                 if self.doc[series].has_key(type_num):
                     for val in self.doc[series][type_num]:
-                        sheet_data = ['exar', response.meta['name'], type_num, part_num, val['type'], val['sheet_url']]
+                        sheet_data = ['exar', response.meta['name'], type_num, part_num, val['type'], response.urljoin(sheet_url), val['sheet_url']]
                         tpl = ['"%s"'] * len(sheet_data)
                         sheet_str += ((','.join(tpl) % tuple(sheet_data)) + "\n")
         self.fp[response.meta['name']].write(csv_str)
