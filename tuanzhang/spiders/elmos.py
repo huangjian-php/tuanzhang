@@ -54,7 +54,7 @@ class ElmosSpider(scrapy.Spider):
                     else:
                         data.append('-')
                 for val in part_num.split(','):
-                    yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta = {'name' : response.meta['name'], 'part_num' : val.strip(), 'desc' : desc, 'data' : data})
+                    yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta = {'name' : response.meta['name'], 'part_num' : val.strip(), 'desc' : desc, 'data' : data}, dont_filter=True)
 
     def tertius_parse(self, response):
         sheet_url = response.xpath('//a[@title="Data Sheet"]/@href').extract()
