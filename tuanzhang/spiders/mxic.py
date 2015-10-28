@@ -57,7 +57,7 @@ class MxicSpider(scrapy.Spider):
                         data.append('-')
                 data = ['mxic', response.meta['name'], part_num, response.urljoin(detail_url), response.urljoin(sheet_url)] + data
                 csv_str += ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
-                yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'part_num' : part_num})
+                yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'part_num' : part_num}, dont_filter=True)
             fp.write(csv_str)
             fp.close()
         elif 'NOR Flash-MCP' == response.meta['name'] or 'NAND Flash-MCP' == response.meta['name']:
@@ -139,17 +139,19 @@ class MxicSpider(scrapy.Spider):
                             data.append('-')
                     data = ['mxic', response.meta['name'], part_num, response.urljoin(detail_url), sheet_url, vol] + data
                     csv_str += ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
-                    yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'part_num' : part_num})
+                    yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'part_num' : part_num}, dont_filter=True)
             fp.write(csv_str)
             fp.close()
 
     def tertius_parse(self, response):
+        #print response.body
         sheet_str = ''
-        for div in response.xpath('/div[re:test(@id, "T[1-6]")]'):
+        for div in response.xpath('//div[re:test(@id, "T[1-6]")]'):
             type = div.xpath('.//tr[1]/td/span/text()').extract()[0]
             urls = div.xpath('.//tr[2]/td/a/@href').extract()
             sheet_data = ['mxic', response.meta['name'], response.meta['part_num'], type] + urls
-            sheet_str += ','.join(['"%s"'] * len(sheet_data)) % tuple(sheet_data) + "\n"
+            sheet_str += (','.join(['"%s"'] * len(sheet_data)) % tuple(sheet_data) + "\n")
+        self.sheet.write(sheet_str)
 
     def closed(spider, reason):
         spider.sheet.close()
