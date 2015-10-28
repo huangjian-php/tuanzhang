@@ -60,7 +60,7 @@ class ElmosSpider(scrapy.Spider):
         sheet_url = response.xpath('//a[@title="Data Sheet"]/@href').extract()
         sheet_url = sheet_url[0] if sheet_url else '-'
 
-        data = ['elmos', response.meta['name'], response.meta['part_num'], sheet_url, response.url, response.meta['desc']] + response.meta['data']
+        data = ['elmos', response.meta['name'], response.meta['part_num'], response.urljoin(sheet_url), response.url, response.meta['desc']] + response.meta['data']
         csv_str = ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
         self.fp[response.meta['name']].write(csv_str)
 
