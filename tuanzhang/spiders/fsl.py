@@ -12,6 +12,7 @@ class FslSpider(scrapy.Spider):
 
     def __init__(self):
         self.sheet = codecs.open(u'fsl/手册/sheet.csv', 'w+', 'utf_8_sig')
+        self.fresh = []
         self.fp = {}
         self.cnt = 0
 
@@ -31,7 +32,7 @@ class FslSpider(scrapy.Spider):
                     src_url = li_v.xpath('./span/a/@href').extract()[0]
                     result = urlparse.urlparse(src_url)
                     params = urlparse.parse_qs(result.fragment, True)
-                    yield scrapy.Request(url % params['c'][0], callback=self.secondary_parse, meta = {'name' : c_name, 'num' : params['c'][0]})
+                    yield scrapy.Request(url % params['c'][0], callback=self.secondary_parse, meta = {'name' : c_name, 'num' : params['c'][0]}, dont_filter=True)
                     #break
                 #break
             #break
@@ -56,7 +57,7 @@ class FslSpider(scrapy.Spider):
             doc_url = None
             if pro['ProdCode'].has_key('documentationURL'):
                 doc_url = response.urljoin(pro['ProdCode']['documentationURL'])
-            yield scrapy.Request(detail_url % (response.meta['num'], pro['ProdCode']['Name']), callback=self.quartus_parse, meta={
+            yield scrapy.Request(detail_url % (response.meta['num'], pro['ProdCode']['Name']), callback=self.quartus_parse, dont_filter=True, meta={
                 'name' : response.meta['name'],
                 'type_number' : pro['ProdCode']['Name'],
                 'tpl' : tpl,
@@ -64,9 +65,6 @@ class FslSpider(scrapy.Spider):
                 'doc_url' : doc_url
                 })
 
-            
-
-                #yield scrapy.Request(response.urljoin(pro['ProdCode']['documentationURL']), callback=self.tertius_parse, meta={'name' : response.meta['name'], 'type_number' : pro['ProdCode']['Name']})
 
     def tertius_parse(self, response):
         head = '"FSL",' + ','.join(['"%s"'] * 2) % (response.meta['name'], response.meta['type_number'])
@@ -84,11 +82,7 @@ class FslSpider(scrapy.Spider):
                 csv_str = ''
                 for title, url in urls.items():
                     csv_str = (head + ',' + ','.join(tpl) % (val, name, title, url) + "\n")
-
-                    self.sheet.write(csv_str)
-                    self.cnt += 1
-                    if 0 == self.cnt % 30:
-                        self.sheet.flush()
+                    self.fresh.append(csv_str)
 
     def quartus_parse(self, response):
         data = json.loads(response.body)
@@ -125,9 +119,17 @@ class FslSpider(scrapy.Spider):
         self.fp[response.meta['name']].write(csv_str)
         self.fp[response.meta['name']].flush()
         if response.meta['doc_url']:
-            yield scrapy.Request(response.meta['doc_url'], callback=self.tertius_parse, meta={'name' : response.meta['name'], 'type_number' : ProdName, 'ProdCode' : ProdCode})
+            yield scrapy.Request(response.meta['doc_url'], callback=self.tertius_parse, meta={'name' : response.meta['name'], 'type_number' : ProdName, 'ProdCode' : ProdCode}, dont_filter=True)
 
     def closed(spider, reason):
-        spider.sheet.close()
         for val in spider.fp:
             spider.fp[val].close()
+
+        for csv_str in spider.fresh:
+            spider.sheet.write(csv_str)
+            spider.cnt += 1
+            if 0 == spider.cnt % 30:
+                spider.cnt = 0
+                spider.sheet.flush()
+
+        spider.sheet.close()

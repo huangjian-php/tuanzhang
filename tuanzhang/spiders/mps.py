@@ -58,7 +58,7 @@ class SheetMpsSpider(scrapy.Spider):
                 '_ga' : 'GA1.2.603964860.1444233118',
                 '_gat' : '1',
                 'language' : 'en-US'
-                }, meta={'name' : name, 'CategoryID' : val['CategoryID']})
+                }, meta={'name' : name, 'CategoryID' : val['CategoryID']}, dont_filter=True)
         
 
     def secondary_parse(self, response):
@@ -127,7 +127,7 @@ class SheetMpsSpider(scrapy.Spider):
                     '_ga' : 'GA1.2.603964860.1444233118',
                     '_gat' : '1',
                     'language' : 'en-US'
-                    }, meta={'name' : response.meta['name'], 'field' : field, 'field_name' : field_name})
+                    }, meta={'name' : response.meta['name'], 'field' : field, 'field_name' : field_name}, dont_filter=True)
         else:
             print "Not match!"
 

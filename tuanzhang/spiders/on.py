@@ -27,7 +27,7 @@ class OnSpider(scrapy.Spider):
                 special.append(url)
                 print url
                 continue
-            yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse)
+            yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, dont_filter=True)
             #break
         
     def secondary_parse(self, response):
@@ -44,14 +44,14 @@ class OnSpider(scrapy.Spider):
                 c_name = name + '-' + c_name[0].strip()
             param = '&action=excelCsv&actionData=undefined&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
             
-            yield scrapy.Request(response.urljoin(url) + param, method='POST', callback=self.tertius_parse, meta={'name' : c_name, 'url' : response.urljoin(url)})
+            yield scrapy.Request(response.urljoin(url) + param, method='POST', callback=self.tertius_parse, meta={'name' : c_name, 'url' : response.urljoin(url)}, dont_filter=True)
             #break
 
     def tertius_parse(self, response):
         param = '&action=setPageSize&actionData=0&sortOrder=asc&sortProperty=&currPage=1&pageSize=0'
         csv_lst = response.body.strip('"\n').split('"\n"')
 
-        return scrapy.Request(response.meta['url'] + param, method='POST', callback=self.quartus_parse, meta={'name' : response.meta['name'], 'csv_lst' : csv_lst})
+        return scrapy.Request(response.meta['url'] + param, method='POST', callback=self.quartus_parse, meta={'name' : response.meta['name'], 'csv_lst' : csv_lst}, dont_filter=True)
 
         #fp = open('on/sheet/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+')
         #fp.write(response.body)
@@ -108,7 +108,7 @@ class OnSpider(scrapy.Spider):
                     copy_lst[0:1] = ['"on"', '"' + response.meta['name'] + '"', id, '"' + part_num + '"', '"' + (detail_url % part_num) + '"', '"' + dataSheet_url + '"', '"' + desc + '"']
                     csv_str += ','.join(copy_lst) + "\n"
                     for (key,val) in sheet.items():
-                        yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num})
+                        yield scrapy.Request(sheet_url % (val, part_num), method='POST', callback=self.fifth, meta={'name' : response.meta['name'], 'type' : key, 'type_num' : type_num, 'part_num' : part_num}, dont_filter=True)
 
             #break
 

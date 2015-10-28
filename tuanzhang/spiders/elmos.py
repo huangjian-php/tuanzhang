@@ -22,7 +22,7 @@ class ElmosSpider(scrapy.Spider):
             for a in div.xpath('.//p[@class="bodytext"]/a'):
                 c_name = name + '-' + a.xpath('./text()').extract()[0].strip()
                 url = a.xpath('./@href').extract()[0]
-                yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta = {'name' : c_name})
+                yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta = {'name' : c_name}, dont_filter=True)
                 #break
             #break
 

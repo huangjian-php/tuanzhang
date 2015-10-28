@@ -119,7 +119,7 @@ class ExarSpider(scrapy.Spider):
                 yield scrapy.Request(url, callback=self.special_work, meta={'name' : name, 'series' : series}, dont_filter=True)
         else:
             for (name,url) in crawl_list.items():
-                yield scrapy.Request(url, callback=self.secondary_parse, meta={'name' : name, 'series' : series})
+                yield scrapy.Request(url, callback=self.secondary_parse, meta={'name' : name, 'series' : series}, dont_filter=True)
                 #break
 
     def secondary_parse(self, response):
@@ -159,7 +159,7 @@ class ExarSpider(scrapy.Spider):
                             params.append(' '.join(val))
                         else:
                             params.append('-')
-                    yield scrapy.Request(response.urljoin(url), callback=self.tertius_parse, meta={'name' : c_name, 'type_num' : type_num, 'params' : params, 'series' : response.meta['series']})
+                    yield scrapy.Request(response.urljoin(url), callback=self.tertius_parse, meta={'name' : c_name, 'type_num' : type_num, 'params' : params, 'series' : response.meta['series']}, dont_filter=True)
                     #break
                 #break
             #break

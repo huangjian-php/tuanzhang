@@ -23,10 +23,10 @@ class FmshSpider(scrapy.Spider):
                 url = dd.xpath('./a/@href').extract()[0]
                 
                 if name == '安全与识别芯片':
-                    yield scrapy.Request(response.urljoin(url), callback=self.tertius_parse, meta={'name' : name})
+                    yield scrapy.Request(response.urljoin(url), callback=self.tertius_parse, meta={'name' : name}, dont_filter=True)
                     break
                 else:
-                    yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta={'name' : c_name})
+                    yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta={'name' : c_name}, dont_filter=True)
             #break
 
     def secondary_parse(self, response):
@@ -73,7 +73,7 @@ class FmshSpider(scrapy.Spider):
             for a in dd.xpath(path_div % x):
                 c_name = response.meta['name'] + '-' + name + '-' + a.xpath('./text()').extract()[0]
                 url = a.xpath('./@href').extract()[0]
-                yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta={'name' : c_name})
+                yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta={'name' : c_name}, dont_filter=True)
                 #break
             #break
 

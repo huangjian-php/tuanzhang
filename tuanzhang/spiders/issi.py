@@ -25,7 +25,7 @@ class IssiSpider(scrapy.Spider):
                 for a in li.xpath(path % x):
                     c_name = name + '-' + a.xpath('./text()').extract()[0]
                     url = a.xpath('./@href').extract()[0]
-                    yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta={'name' : c_name})
+                    yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta={'name' : c_name}, dont_filter=True)
                     #break
                 #break
             #break

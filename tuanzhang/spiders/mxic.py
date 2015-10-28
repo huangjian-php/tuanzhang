@@ -29,7 +29,7 @@ class MxicSpider(scrapy.Spider):
 
     def parse(self, response):
         for (name,url) in self.crawl_list.items():
-            yield scrapy.Request(url, callback=self.secondary_parse, meta={'name' : name})
+            yield scrapy.Request(url, callback=self.secondary_parse, meta={'name' : name}, dont_filter=True)
             #break
 
     def secondary_parse(self, response):

@@ -19,7 +19,7 @@ class NxpSpider(scrapy.Spider):
         for h3 in response.xpath('//div[@class="article-content"]/h3/a'):
             url = h3.xpath('./@href').extract()[0]
             name = h3.xpath('./text()').extract()[0]
-            yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta = {'name' : name})
+            yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta = {'name' : name}, dont_filter=True)
             #break
 
     def secondary_parse(self, response):
@@ -44,7 +44,7 @@ class NxpSpider(scrapy.Spider):
                         url = li.xpath('./a[@class="nxp-white"]/@href').extract()[0]
                         id = li.xpath('./@id').extract()[0]
                         product_id = id.split('-')[1]
-                        yield scrapy.Request(response.urljoin(url), callback=self.tertius_parse, meta = {'name' : name, 'product_id' : product_id})
+                        yield scrapy.Request(response.urljoin(url), callback=self.tertius_parse, meta = {'name' : name, 'product_id' : product_id}, dont_filter=True)
                         #break
 
     def tertius_parse(self, response):
@@ -63,7 +63,7 @@ class NxpSpider(scrapy.Spider):
                     print type_number
                     print response.url
 
-                yield scrapy.Request(response.urljoin(detail_url), callback=self.fifth, meta={'name' : name, 'type_number' : type_number})
+                yield scrapy.Request(response.urljoin(detail_url), callback=self.fifth, meta={'name' : name, 'type_number' : type_number}, dont_filter=True)
 
                 sheet_url = tr.xpath('./td[4]/a[@title="Download datasheet"]/@href').extract()
                 if sheet_url:
@@ -81,7 +81,7 @@ class NxpSpider(scrapy.Spider):
                 ]
 
             data_url = 'http://www.nxp.com/parametrics/psdata/?p=1&s=0&c=&rpp=&fs=0&sc=&so=&es=&type=initial&i=%s'
-            yield scrapy.Request(data_url % response.meta['product_id'], callback=self.quartus_parse, meta={'product_info' : product_info, 'name' : name})
+            yield scrapy.Request(data_url % response.meta['product_id'], callback=self.quartus_parse, meta={'product_info' : product_info, 'name' : name}, dont_filter=True)
 
     def quartus_parse(self, response):
         data = json.loads(response.body)

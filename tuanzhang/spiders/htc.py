@@ -34,7 +34,7 @@ class SheetSpider(scrapy.Spider):
             for row in url_lst:
                 sn = row.xpath('./strong/text() | ./text()').extract()[0]
                 url = row.xpath('./@href').extract()[0]
-                yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta = {'sn' : sn})
+                yield scrapy.Request(response.urljoin(url), callback=self.secondary_parse, meta = {'sn' : sn}, dont_filter=True)
 
     def secondary_parse(self, response):
         pdf_url = response.xpath('//td/a[@class="link_6"]/@href').extract()
