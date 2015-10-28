@@ -11,6 +11,7 @@ class ElmosSpider(scrapy.Spider):
     )
 
     def __init__(self):
+        self.fp = {}
         self.sheet = codecs.open(u'elmos/手册/sheet.csv', 'w+', 'utf_8_sig')
         title = ['brand', 'Series', 'PartNo', 'Type', 'Url']
         self.sheet.write(','.join(['"%s"'] * len(title)) % tuple(title) + "\n")
@@ -35,9 +36,10 @@ class ElmosSpider(scrapy.Spider):
                     title.append(' '.join(text))
                 else:
                     title.append('-')
-            title[0:1] = ['brand', 'Series', 'PartNo', 'DetailLink', 'Description']
-            fp = codecs.open('elmos/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
+            title[0:1] = ['brand', 'Series', 'PartNo', 'DataSheet', 'DetailLink', 'Description']
+            self.fp[response.meta['name']] = codecs.open('elmos/main/' + re.sub(r'[/:|?*"\\<>]', '&', response.meta['name']) + '.csv', 'w+', 'utf_8_sig')
             csv_str = ','.join(['"%s"'] * len(title)) % tuple(title) + "\n"
+            self.fp[response.meta['name']].write(csv_str)
 
             for tr in section.xpath('.//tr[position() > 1]'):
                 part_num = tr.xpath('./td[1]/a/text()').extract()[0]
@@ -52,13 +54,16 @@ class ElmosSpider(scrapy.Spider):
                     else:
                         data.append('-')
                 for val in part_num.split(','):
-                    data = ['elmos', response.meta['name'], val.strip(), response.urljoin(detail_url), desc] + data
-                    csv_str += ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
-                    yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta = {'name' : response.meta['name'], 'part_num' : val})
-            fp.write(csv_str)
-            fp.close()
+                    yield scrapy.Request(response.urljoin(detail_url), callback=self.tertius_parse, meta = {'name' : response.meta['name'], 'part_num' : val.strip(), 'desc' : desc, 'data' : data})
 
     def tertius_parse(self, response):
+        sheet_url = response.xpath('//a[@title="Data Sheet"]/@href').extract()
+        sheet_url = sheet_url[0] if sheet_url else '-'
+
+        data = ['elmos', response.meta['name'], response.meta['part_num'], sheet_url, response.url, response.meta['desc']] + response.meta['data']
+        csv_str = ','.join(['"%s"'] * len(data)) % tuple(data) + "\n"
+        self.fp[response.meta['name']].write(csv_str)
+
         sheet_str = ''
         for li in response.xpath('//div[@id="no-more-tables"]/div/div[last()-1]/ul/li'):
             type = li.xpath('./text()').extract()[0].strip(' |\n')
@@ -70,3 +75,5 @@ class ElmosSpider(scrapy.Spider):
 
     def closed(spider, reason):
         spider.sheet.close()
+        for val in spider.fp:
+            spider.fp[val].close()

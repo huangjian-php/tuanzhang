@@ -173,7 +173,8 @@ class ExarSpider(scrapy.Spider):
             text = tr.xpath('./td[1]/text()').extract()
             if text:
                 part_num = text[0]
-                sheet_url = response.xpath('//a[contains(@href, "datasheet")]/@href').extract()[0]
+                sheet_url = response.xpath('//a[contains(@href, "datasheet")]/@href').extract()
+                sheet_url = sheet_url[0] if sheet_url else '-'
 
                 csv_data = ['exar', response.meta['name'], type_num, part_num, response.url] + response.meta['params']
                 tpl = ['"%s"'] * len(csv_data)
