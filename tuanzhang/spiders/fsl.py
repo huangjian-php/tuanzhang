@@ -129,7 +129,7 @@ class FslSpider(scrapy.Spider):
             ProdName = pro['ProdName']
         self.fp[response.meta['name']].write(csv_str)
         self.fp[response.meta['name']].flush()
-        if response.meta['doc_url'] and not os.path.exists(u'fsl/手册/' + re.sub(r'[/:|?*"\\<>]', '&', ProdName) + '.csv'):
+        if response.meta['doc_url'] and not os.path.exists(u'fsl/手册/tmp/' + re.sub(r'[/:|?*"\\<>]', '&', ProdName) + '.csv'):
             yield scrapy.Request(response.meta['doc_url'], callback=self.tertius_parse, meta={'name' : response.meta['name'], 'type_number' : ProdName, 'ProdCode' : ProdCode}, dont_filter=True)
 
     def closed(spider, reason):
